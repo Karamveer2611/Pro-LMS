@@ -86,6 +86,7 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/sessions/{session}/attendance', [AttendanceController::class, 'index']);
         Route::post('/sessions/{session}/attendance', [AttendanceController::class, 'store']);
+        Route::get('/sessions/{session}/roster', [AttendanceController::class, 'roster']);
         Route::get('/me/attendance', [AttendanceController::class, 'mine']);
     });
 });

@@ -171,4 +171,21 @@ class AttendanceTest extends TestCase
         $this->actingAs($instructor)->getJson("/api/v1/sessions/{$session->id}/attendance")
             ->assertOk()->assertJsonCount(1);
     }
+
+    public function test_the_batch_roster_endpoint_returns_every_enrolled_learner_even_before_any_marking(): void
+    {
+        [$instructor, $session, $learner] = $this->sessionWithEnrolledLearner();
+
+        $response = $this->actingAs($instructor)->getJson("/api/v1/sessions/{$session->id}/roster");
+
+        $response->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $learner->id);
+    }
+
+    public function test_an_instructor_cannot_view_the_roster_for_a_session_they_are_not_assigned_to(): void
+    {
+        [, $session] = $this->sessionWithEnrolledLearner();
+        $otherInstructor = User::factory()->instructor()->create();
+
+        $this->actingAs($otherInstructor)->getJson("/api/v1/sessions/{$session->id}/roster")->assertForbidden();
+    }
 }

@@ -25,7 +25,6 @@ export default function AdminBatchesPage() {
   }, []);
 
   useEffect(() => {
-    setBatches("loading");
     listBatches({
       status: statusFilter === "all" ? undefined : statusFilter,
       course_id: courseFilter === "all" ? undefined : courseFilter,

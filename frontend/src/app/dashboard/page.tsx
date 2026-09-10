@@ -61,12 +61,40 @@ export default function DashboardPage() {
           </span>
 
           {user.role === "admin" && (
-            <div className="mt-4">
+            <div className="mt-4 flex gap-3">
               <Link
                 href="/admin/courses"
                 className="inline-block rounded-md bg-brand-primary px-4 py-2 text-sm font-semibold text-white hover:bg-brand-primary-dark"
               >
                 Manage Courses
+              </Link>
+              <Link
+                href="/admin/enrollments"
+                className="inline-block rounded-md border border-border px-4 py-2 text-sm font-semibold text-ink-2 hover:border-brand-primary hover:text-brand-primary"
+              >
+                Enrollments
+              </Link>
+            </div>
+          )}
+
+          {user.role === "learner" && (
+            <div className="mt-4">
+              <Link
+                href="/learn"
+                className="inline-block rounded-md bg-brand-primary px-4 py-2 text-sm font-semibold text-white hover:bg-brand-primary-dark"
+              >
+                Go to My Courses
+              </Link>
+            </div>
+          )}
+
+          {user.role === "instructor" && (
+            <div className="mt-4">
+              <Link
+                href="/instructor"
+                className="inline-block rounded-md bg-brand-primary px-4 py-2 text-sm font-semibold text-white hover:bg-brand-primary-dark"
+              >
+                My Sessions
               </Link>
             </div>
           )}

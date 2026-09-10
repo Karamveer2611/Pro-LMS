@@ -8,6 +8,7 @@ import { fetchCurrentUser, logout, type User } from "@/lib/auth";
 const NAV = [
   { href: "/admin/courses", label: "Courses" },
   { href: "/admin/batches", label: "Batches" },
+  { href: "/admin/enrollments", label: "Enrollments" },
 ];
 
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
