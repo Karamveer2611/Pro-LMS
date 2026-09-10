@@ -1,0 +1,810 @@
+<title>PoshProfs LMS Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg:#f7f5f1;
+    --surface:#ffffff;
+    --surface-2:#f0ede7;
+    --border:#ddd7cc;
+    --ink:#241f18;
+    --ink-2:#5b5548;
+    --ink-3:#8a8272;
+    --accent:#1f4e79;
+    --accent-ink:#ffffff;
+    --accent-soft:#e7eef5;
+    --gold:#a5762f;
+    --gold-soft:#f6eddc;
+    --danger:#8a3324;
+    --danger-soft:#f7e6e1;
+    --good:#3c6e4f;
+    --good-soft:#e6efe8;
+    --code-bg:#efe9dc;
+    --shadow: 0 1px 2px rgba(36,31,24,.06), 0 8px 24px -12px rgba(36,31,24,.18);
+    --font-display:'Fraunces', 'Iowan Old Style', Georgia, serif;
+    --font-body:'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    --font-mono:'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#181510; --surface:#211d17; --surface-2:#282319; --border:#3a342a;
+      --ink:#ece6d9; --ink-2:#c2baa8; --ink-3:#8f8674;
+      --accent:#7fa8d4; --accent-ink:#0f1a24; --accent-soft:#1c2b39;
+      --gold:#d3a55f; --gold-soft:#332a19;
+      --danger:#e0a292; --danger-soft:#3a1f19;
+      --good:#95c7a8; --good-soft:#1c2c22;
+      --code-bg:#2a251c;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#181510; --surface:#211d17; --surface-2:#282319; --border:#3a342a;
+    --ink:#ece6d9; --ink-2:#c2baa8; --ink-3:#8f8674;
+    --accent:#7fa8d4; --accent-ink:#0f1a24; --accent-soft:#1c2b39;
+    --gold:#d3a55f; --gold-soft:#332a19;
+    --danger:#e0a292; --danger-soft:#3a1f19;
+    --good:#95c7a8; --good-soft:#1c2c22;
+    --code-bg:#2a251c;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+
+  *{box-sizing:border-box;}
+  body{ background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.6; font-size:15.5px; }
+  a{color:var(--accent);}
+  ::selection{background:var(--accent-soft);}
+
+  .shell{ display:grid; grid-template-columns: 270px minmax(0,1fr); gap:0; max-width:1320px; margin:0 auto; }
+  @media (max-width: 900px){ .shell{grid-template-columns: 1fr;} .toc{display:none;} }
+
+  .toc{ position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto; padding:28px 16px 40px 28px; border-right:1px solid var(--border); }
+  .toc-brand{ font-family:var(--font-display); font-weight:600; font-size:1.05rem; margin-bottom:2px; }
+  .toc-sub{ font-size:.7rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); margin-bottom:10px; }
+  .toc-rev{ font-family:var(--font-mono); font-size:.68rem; color:var(--gold); margin-bottom:20px; }
+  .toc nav{display:flex; flex-direction:column; gap:1px;}
+  .toc nav a{ font-size:.79rem; color:var(--ink-2); text-decoration:none; padding:4px 8px; border-radius:5px; display:block; }
+  .toc nav a:hover{background:var(--surface-2); color:var(--ink);}
+
+  main{padding:44px 48px 100px; min-width:0;}
+  @media (max-width: 640px){ main{padding:28px 18px 80px;} }
+
+  header.doc-header{ border-bottom:1px solid var(--border); padding-bottom:28px; margin-bottom:30px; }
+  .eyebrow{ font-family:var(--font-mono); font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--gold); margin-bottom:10px; }
+  h1.title{ font-family:var(--font-display); font-weight:600; font-size:clamp(1.7rem, 3.2vw, 2.4rem); line-height:1.14; text-wrap:balance; margin:0 0 10px; }
+  .dek{ color:var(--ink-2); font-size:1rem; max-width:66ch; }
+  .meta-row{ display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+  .badge{ font-family:var(--font-mono); font-size:.72rem; padding:4px 10px; border-radius:999px; border:1px solid var(--border); background:var(--surface-2); color:var(--ink-2); }
+  .badge.status{background:var(--gold-soft); color:var(--gold); border-color:transparent; font-weight:500;}
+  .badge.removed{background:var(--danger-soft); color:var(--danger); border-color:transparent;}
+
+  section{margin-bottom:44px; scroll-margin-top:20px;}
+  h2{ font-family:var(--font-display); font-weight:600; font-size:1.42rem; text-wrap:balance; margin:0 0 4px; display:flex; align-items:baseline; gap:10px; }
+  h2 .num{color:var(--ink-3); font-family:var(--font-mono); font-size:.95rem; font-weight:400;}
+  h3{ font-family:var(--font-body); font-weight:600; font-size:1.02rem; margin:24px 0 10px; color:var(--ink); }
+  p{margin:0 0 12px; max-width:76ch; color:var(--ink-2);}
+  p strong, li strong{color:var(--ink); font-weight:600;}
+  ul, ol{margin:0 0 14px; padding-left:1.3em; max-width:76ch; color:var(--ink-2);}
+  li{margin-bottom:5px;}
+  li::marker{color:var(--ink-3);}
+  code{ font-family:var(--font-mono); background:var(--code-bg); padding:.12em .4em; border-radius:4px; font-size:.86em; color:var(--ink); }
+
+  .callout{ border:1px solid var(--border); border-left:3px solid var(--accent); background:var(--surface); border-radius:8px; padding:14px 18px; margin:16px 0; box-shadow:var(--shadow); }
+  .callout p:last-child{margin-bottom:0;}
+  .callout .label{ font-family:var(--font-mono); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin-bottom:6px; font-weight:500; }
+  .callout.risk{border-left-color:var(--danger);} .callout.risk .label{color:var(--danger);}
+  .callout.decision{border-left-color:var(--gold);} .callout.decision .label{color:var(--gold);}
+  .callout.good{border-left-color:var(--good);} .callout.good .label{color:var(--good);}
+
+  .diagram-panel{ border:1px solid var(--border); background:var(--surface); border-radius:10px; padding:18px; margin:16px 0 20px; box-shadow:var(--shadow); overflow-x:auto; }
+
+  .table-wrap{overflow-x:auto; margin:16px 0 20px; border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; background:var(--surface);}
+  thead th{ text-align:left; background:var(--surface-2); font-family:var(--font-mono); font-weight:500; font-size:.7rem; letter-spacing:.03em; text-transform:uppercase; color:var(--ink-2); padding:10px 14px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  tbody td{ padding:10px 14px; border-bottom:1px solid var(--border); color:var(--ink-2); vertical-align:top; }
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--surface-2);}
+
+  .schema-block{ font-family:var(--font-mono); font-size:.8rem; background:var(--code-bg); border:1px solid var(--border); border-radius:8px; padding:14px 16px; overflow-x:auto; line-height:1.65; color:var(--ink); margin:10px 0 16px; white-space:pre-wrap; }
+  .schema-block .tbl-name{color:var(--accent); font-weight:500;}
+
+  .pill-row{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 18px;}
+  .pill{ font-family:var(--font-mono); font-size:.75rem; padding:5px 11px; border-radius:6px; background:var(--accent-soft); color:var(--accent); border:1px solid transparent; }
+  .pill.out{background:var(--danger-soft); color:var(--danger);}
+  .pill.p1{background:var(--gold-soft); color:var(--gold);}
+
+  .checklist{list-style:none; padding-left:0;}
+  .checklist li{ display:flex; gap:10px; align-items:flex-start; padding:6px 0; border-bottom:1px dashed var(--border); }
+  .checklist li:last-child{border-bottom:none;}
+  .checklist .box{ flex:none; width:16px; height:16px; margin-top:3px; border:1.5px solid var(--ink-3); border-radius:4px; }
+
+  .changelog{width:100%; border-collapse:collapse; font-size:.85rem;}
+  .changelog th, .changelog td{padding:8px 12px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top;}
+  .changelog th{font-family:var(--font-mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-3); background:var(--surface-2);}
+
+  hr.section-rule{border:none; border-top:1px solid var(--border); margin:40px 0;}
+  footer.doc-footer{ margin-top:56px; padding-top:20px; border-top:1px solid var(--border); color:var(--ink-3); font-size:.8rem; font-family:var(--font-mono); }
+  .mermaid{background:transparent !important;}
+</style>
+
+<div class="shell">
+  <aside class="toc">
+    <div class="toc-brand">PoshProfs LMS</div>
+    <div class="toc-sub">Phase 0 — Final Architecture</div>
+    <div class="toc-rev">Rev. 3 · 2026-09-10</div>
+    <nav>
+      <a href="#changes">Δ What changed</a>
+      <a href="#tldr">0 · TL;DR</a>
+      <a href="#sys">1 · System architecture</a>
+      <a href="#modules">2 · Module breakdown</a>
+      <a href="#erd">3 · Database ERD</a>
+      <a href="#auth">4 · Auth &amp; RBAC</a>
+      <a href="#content">5 · Course &amp; content model</a>
+      <a href="#enrollment">6 · Enrollment &amp; expiry</a>
+      <a href="#drip">7 · Drip content</a>
+      <a href="#batches">8 · Batches, sessions &amp; attendance</a>
+      <a href="#assess">9 · Assessments &amp; Final Assessment</a>
+      <a href="#cert">10 · Certificate system</a>
+      <a href="#public">11 · Public flow &amp; manual enrollment</a>
+      <a href="#notif">12 · Notifications</a>
+      <a href="#files">13 · Files &amp; Bunny Stream</a>
+      <a href="#reuse">14 · Open-source reuse</a>
+      <a href="#api">15 · API architecture</a>
+      <a href="#hosting">16 · Database hosting</a>
+      <a href="#deploy">17 · Deployment</a>
+      <a href="#testing">18 · Testing strategy</a>
+      <a href="#security">19 · Security checklist</a>
+      <a href="#uiarch">20 · UI architecture</a>
+      <a href="#scope">21 · V1 scope (P0/P1/P2)</a>
+      <a href="#outscope">22 · Out of scope</a>
+      <a href="#timeline">23 · Timeline (fixed)</a>
+      <a href="#risks">24 · Risks</a>
+      <a href="#decisions">25 · Remaining decisions</a>
+    </nav>
+  </aside>
+
+  <main>
+    <header class="doc-header">
+      <div class="eyebrow">Phase 0 · FINAL Architecture &amp; Specification</div>
+      <h1 class="title">PoshProfs Trainers LMS — Final Architecture</h1>
+      <p class="dek">Revision 3: payments removed from V1, dual-mode certificate designer added, Oct 20 2026 reinstated as the fixed target with scope cut to fit, Edmingle migration dropped, database hosting decided. No production code has been written — awaiting explicit approval.</p>
+      <div class="meta-row">
+        <span class="badge status">Final draft — awaiting approval</span>
+        <span class="badge">Rev 3 · 2026-09-10</span>
+        <span class="badge removed">Payments removed from V1</span>
+        <span class="badge">Target: Oct 20, 2026 (fixed)</span>
+      </div>
+    </header>
+
+    <div class="callout decision" style="margin-bottom:30px;">
+      <div class="label">2026-09-11 naming update</div>
+      <p>The product's on-screen display name changed from "PoshProfs Trainers" to <strong>"Pro-LMS"</strong>, per an explicit client decision made with full awareness that this replaces the real-brand audit below (blue <code>#0E689C</code> / gold <code>#F9A825</code>, pulled live from poshprofstrainers.com) with a new placeholder palette (indigo <code>#3452DB</code> / emerald <code>#10B981</code>) sourced for nothing in particular — no brand reference exists yet for "Pro-LMS". <strong>Nothing else in this document changed</strong> — schema, RBAC, certificate logic, and timeline stand as written. Every "PoshProfs Trainers" reference below is historical record of that research, not a contradiction to resolve.</p>
+    </div>
+
+    <section id="changes">
+      <h2>Δ What changed in this revision</h2>
+      <div class="table-wrap">
+        <table class="changelog">
+          <thead><tr><th>Area</th><th>Was (Rev 2)</th><th>Now (Rev 3 — final)</th></tr></thead>
+          <tbody>
+            <tr><td>Payments</td><td>Full Razorpay module (orders, payments, webhooks, coupons, GST)</td><td><strong>Removed entirely from V1.</strong> Price → Contact Admin → manual enrollment.</td></tr>
+            <tr><td>Timeline</td><td>Oct 20 treated as soft; full V1 planned for ~Q2 2027</td><td><strong>Oct 20, 2026 fixed.</strong> Scope cut to fit (§21), not the date moved.</td></tr>
+            <tr><td>Certificate templates</td><td>HTML/CSS only</td><td><strong>Dual-mode</strong>: drag-and-drop designer (P1) + HTML/CSS editor (P0), one render pipeline.</td></tr>
+            <tr><td>Certificate revocation</td><td>Not specified</td><td>Explicit revoke + replace; numbers never reused.</td></tr>
+            <tr><td>Edmingle migration</td><td>Open decision</td><td><strong>Confirmed out of scope.</strong> Fresh start.</td></tr>
+            <tr><td>Video</td><td>Bunny Stream recommended, Mux as alternative</td><td><strong>Bunny Stream confirmed.</strong></td></tr>
+            <tr><td>DB hosting</td><td>Flagged as needing a budget decision</td><td><strong>Decided</strong>: DigitalOcean Managed PostgreSQL, Bangalore (§16).</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="tldr">
+      <h2><span class="num">0</span> TL;DR</h2>
+      <ul>
+        <li><strong>Modular monolith</strong>: Next.js + Laravel + PostgreSQL (managed, DO Bangalore) + Redis + S3-compatible storage + <strong>Bunny Stream</strong>. <strong>No payment gateway in V1.</strong></li>
+        <li><strong>Three roles only</strong> — Admin, Instructor, Learner — server-side Policies.</li>
+        <li><strong>Commercial flow</strong>: catalog shows price as marketing info → <strong>Contact Admin</strong> → business happens off-platform → <strong>Admin manually enrolls</strong>. No checkout, no orders, anywhere.</li>
+        <li><strong>Certificates</strong> are the largest V1 subsystem: Final Course Assessment–triggered, strict AND-only eligibility, per-batch overrides, dual-mode templates (designer + HTML), full revoke/replace lifecycle.</li>
+      </ul>
+      <div class="callout decision">
+        <div class="label">Timeline — fixed, not soft</div>
+        <p>Oct 20, 2026 is ~40 days out and is now the fixed target. Scope has been tiered P0/P1/P2 (§21) to fit — see §23 for the week-by-week plan and §24 for exactly where it's tightest.</p>
+      </div>
+    </section>
+
+    <section id="sys">
+      <h2><span class="num">1</span> System architecture</h2>
+      <div class="diagram-panel">
+        <pre class="mermaid">
+flowchart TB
+    subgraph Client["Clients"]
+        PubWeb["Public Website\n(Next.js SSR/ISR)"]
+        LearnerApp["Learner Dashboard\n(Next.js)"]
+        InstructorApp["Instructor Dashboard\n(Next.js)"]
+        AdminApp["Admin Panel\n(Next.js)"]
+    end
+    subgraph Edge["Edge / Infra"]
+        Nginx["Nginx (TLS, reverse proxy)"]
+    end
+    subgraph App["Laravel Modular Monolith (single deployable)"]
+        API["REST API\n(Sanctum auth)"]
+        Modules["Domain Modules:\nUsers · Courses · Enrollments · Batches\nAssessments · Certificates · Attendance\nNotifications · Reporting · Files"]
+        Queue["Queue Workers\n(Redis-backed)"]
+        Scheduler["Cron Scheduler\n(expiry sweep, reminders)"]
+    end
+    subgraph Data["Data Layer"]
+        PG[("PostgreSQL\nDigitalOcean Managed, BLR1")]
+        RedisC[("Redis\ncache + queue + session")]
+    end
+    subgraph External["External Services"]
+        S3[("S3-compatible\nObject Storage")]
+        Bunny["Bunny Stream\n(signed video playback)"]
+        Email["Transactional Email"]
+        WhatsApp["WhatsApp\n(interface only, not built)"]
+    end
+    PubWeb --> Nginx
+    LearnerApp --> Nginx
+    InstructorApp --> Nginx
+    AdminApp --> Nginx
+    Nginx --> API
+    API --> Modules
+    Modules --> PG
+    Modules --> RedisC
+    Modules -.enqueue.-> Queue
+    Queue --> PG
+    Queue --> Email
+    Queue -.future.-> WhatsApp
+    Scheduler -.trigger.-> Queue
+    Modules --> S3
+    Modules <-->|signed playback URLs| Bunny
+        </pre>
+        <div class="diagram-caption" style="font-family:var(--font-mono);font-size:.72rem;color:var(--ink-3);text-align:center;margin-top:10px;">No payments module, no orders, no payment webhooks. Only object storage, Bunny Stream, and email are external in V1.</div>
+      </div>
+    </section>
+
+    <section id="modules">
+      <h2><span class="num">2</span> Module breakdown</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Module</th><th>Owns</th><th>Talks to</th></tr></thead>
+          <tbody>
+            <tr><td>Auth</td><td>Registration, login, reset, Sanctum tokens</td><td>Users</td></tr>
+            <tr><td>Users</td><td>Profiles, role assignment</td><td>Auth, all modules</td></tr>
+            <tr><td>Access Control</td><td>Policies/Gates, ownership checks</td><td>Every module</td></tr>
+            <tr><td>Courses</td><td>Course/module/section/lesson CRUD, categories</td><td>Files, Access Control</td></tr>
+            <tr><td>Course Content</td><td>Drip rules, ordering, preview flags</td><td>Courses, Enrollments</td></tr>
+            <tr><td>Batches</td><td>Batch CRUD, instructor assignment</td><td>Courses, Instructors, Sessions</td></tr>
+            <tr><td>Enrollments</td><td>Lifecycle (manual only in V1), access-expiry</td><td>Courses, Batches</td></tr>
+            <tr><td>Sessions / Live Training</td><td>Scheduling, meeting links</td><td>Batches, Attendance</td></tr>
+            <tr><td>Attendance</td><td>Manual marking, reporting</td><td>Sessions, Users</td></tr>
+            <tr><td>Assessments</td><td>Config, module tests, Final Course Assessment</td><td>Question Bank, Enrollments</td></tr>
+            <tr><td>Question Bank</td><td>Questions, options, tags</td><td>Assessments</td></tr>
+            <tr><td>Certificates</td><td>Templates (designer+HTML), config/eligibility, issuance, revocation, verification</td><td>Enrollments, Assessments, Files</td></tr>
+            <tr><td>Notifications</td><td>Email + in-app now, WhatsApp interface only</td><td>All modules</td></tr>
+            <tr><td>Reporting</td><td>Aggregation queries, CSV export</td><td>All modules</td></tr>
+            <tr><td>Files / Media</td><td>Storage abstraction, signed URLs, Bunny Stream</td><td>S3, Bunny Stream</td></tr>
+            <tr><td>Settings</td><td>Branding, attendance-edit window, defaults</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>No Payments/Orders module in V1.</strong> Each module: Controllers (thin) → Services (business rules) → Policies → Models → Requests → Resources → Jobs.</p>
+    </section>
+
+    <section id="erd">
+      <h2><span class="num">3</span> Database ERD</h2>
+      <div class="diagram-panel">
+        <pre class="mermaid">
+erDiagram
+    USERS ||--o{ ENROLLMENTS : has
+    USERS ||--o{ CERTIFICATES : earns
+    USERS ||--o{ ATTEMPTS : takes
+    USERS ||--o{ BATCH_INSTRUCTORS : "assigned as"
+    USERS ||--o{ ATTENDANCE : "marked for"
+
+    CATEGORIES ||--o{ COURSE_CATEGORIES : ""
+    COURSES ||--o{ COURSE_CATEGORIES : ""
+    COURSES ||--o{ MODULES : contains
+    MODULES ||--o{ SECTIONS : contains
+    SECTIONS ||--o{ LESSONS : contains
+    LESSONS ||--o{ LESSON_PROGRESS : tracked_by
+    LESSONS }o--o| MEDIA_ASSETS : uses
+
+    COURSES ||--o{ BATCHES : "offered as"
+    BATCHES ||--o{ BATCH_INSTRUCTORS : has
+    BATCHES ||--o{ LIVE_SESSIONS : schedules
+    LIVE_SESSIONS ||--o{ ATTENDANCE : records
+
+    COURSES ||--o{ ENROLLMENTS : "enrolled into"
+    BATCHES ||--o{ ENROLLMENTS : "optionally via"
+    ENROLLMENTS ||--o| COURSE_PROGRESS : summarized_by
+    ENROLLMENTS ||--o{ LESSON_PROGRESS : detailed_by
+
+    COURSES ||--o{ ASSESSMENTS : "module tests / final"
+    ASSESSMENTS ||--o{ ASSESSMENT_QUESTIONS : includes
+    QUESTIONS ||--o{ ASSESSMENT_QUESTIONS : "used in"
+    QUESTIONS ||--o{ QUESTION_OPTIONS : has
+    QUESTIONS }o--o{ QUESTION_TAGS : tagged
+
+    ASSESSMENTS ||--o{ ATTEMPTS : attempted
+    ATTEMPTS ||--o{ ATTEMPT_ANSWERS : contains
+    QUESTIONS ||--o{ ATTEMPT_ANSWERS : answered_in
+
+    COURSES ||--o| CERTIFICATE_CONFIGS : "default config"
+    BATCHES ||--o| CERTIFICATE_CONFIGS : "override config"
+    ASSESSMENTS ||--o{ CERTIFICATE_CONFIGS : "final assessment"
+    CERTIFICATE_TEMPLATES ||--o{ CERTIFICATE_CONFIGS : "default template"
+
+    ENROLLMENTS ||--o| CERTIFICATE_ELIGIBILITY : evaluated_as
+    CERTIFICATE_CONFIGS ||--o{ CERTIFICATE_ELIGIBILITY : "evaluated against"
+    ATTEMPTS ||--o| CERTIFICATE_ELIGIBILITY : "best attempt"
+    CERTIFICATE_ELIGIBILITY ||--o| CERTIFICATES : "may produce"
+    CERTIFICATE_TEMPLATES ||--o{ CERTIFICATES : "rendered with"
+    CERTIFICATES ||--o| CERTIFICATES : "replaces (self-ref)"
+    BATCHES ||--o{ CERTIFICATES : "issued for"
+
+    USERS ||--o{ NOTIFICATIONS : receives
+    NOTIFICATIONS ||--o{ NOTIFICATION_LOGS : "delivery attempts"
+        </pre>
+      </div>
+      <p style="font-family:var(--font-mono);font-size:.78rem;color:var(--ink-3);">No <code>orders</code>, <code>payments</code>, or <code>coupons</code> tables in this revision.</p>
+
+      <h3>Core tables (illustrative — finalized as Phase 1 migrations)</h3>
+      <div class="schema-block"><span class="tbl-name">users</span> — id, name, email (unique), password_hash, role (admin|instructor|learner), phone, status, email_verified_at</div>
+      <div class="schema-block"><span class="tbl-name">courses</span> — title, slug, description, format, price, discount_price, default_access_days (null=lifetime), status. <em>price/discount_price are display-only marketing fields — nothing gates access on them.</em></div>
+      <div class="schema-block"><span class="tbl-name">modules / sections / lessons</span> — hierarchical, order, is_published. lessons +: type, media_id, is_preview, is_required, release_type/value</div>
+      <div class="schema-block"><span class="tbl-name">media_assets</span> — owner_type/id, collection, disk, storage_key, mime_type, size_bytes, video_provider='bunny', video_provider_asset_id, duration_seconds, status</div>
+      <div class="schema-block"><span class="tbl-name">batches</span> — course_id, name, start/end date, status, access_days_override, capacity</div>
+      <div class="schema-block"><span class="tbl-name">enrollments</span> — <em>the authoritative access record</em>: user_id, course_id, batch_id, source (manual), enrolled_at, expires_at, status, enrolled_by (admin), notes. Unique (user_id, course_id, batch_id)</div>
+      <div class="schema-block"><span class="tbl-name">course_progress / lesson_progress</span> — cached rollup + per-lesson status</div>
+      <div class="schema-block"><span class="tbl-name">live_sessions / attendance</span> — session: batch_id, instructor_id, scheduled_at, meeting_link. attendance: session_id, user_id, status (present|absent|excused), unique(session_id,user_id)</div>
+      <div class="schema-block"><span class="tbl-name">questions / options / tags · assessments / assessment_questions / attempts / attempt_answers</span> — MCQ engine; assessments: course_id or module_id, passing_score_percent, max_attempts, randomize_questions; attempts: score, percent, passed, status</div>
+      <div class="schema-block"><span class="tbl-name">certificate_templates</span> — name, mode (designer|html), design_json (nullable, designer mode only), template_html (always present — always the render source), background_media_id</div>
+      <div class="schema-block"><span class="tbl-name">certificate_configs</span> — course_id, batch_id (nullable=default), is_enabled, final_assessment_id, template_id, auto_generate, cond_completion_enabled/min_percent, cond_assessment_percent_enabled/min, cond_assessment_marks_enabled/min. Partial unique: (course_id) WHERE batch_id IS NULL; (course_id,batch_id) WHERE NOT NULL</div>
+      <div class="schema-block"><span class="tbl-name">certificate_eligibility</span> — enrollment_id (unique), certificate_config_id, best_attempt_id, status (not_applicable|not_eligible|eligible|issued), condition_results (json), evaluated_at</div>
+      <div class="schema-block"><span class="tbl-name">certificates</span> — template_id, certificate_config_id, user_id, course_id, batch_id, enrollment_id, final_attempt_id, certificate_number (unique, never reused), verification_code (unique, never reused), issued_at, pdf_media_id, status (active|revoked), revoked_at/by/reason, replaces_certificate_id (self-ref). Partial unique: (enrollment_id) WHERE status='active'</div>
+      <div class="schema-block"><span class="tbl-name">notifications / notification_logs / audit_logs</span> — multi-channel dispatch + delivery log + admin-action audit trail</div>
+    </section>
+
+    <section id="auth">
+      <h2><span class="num">4</span> Authentication &amp; RBAC</h2>
+      <p>Unchanged from Rev 2 — reconfirmed, not re-litigated. Laravel Sanctum; single <code>role</code> enum + Laravel Policies (one per resource); ownership checks centralized in one method per rule; every route wrapped in <code>auth:sanctum</code> + a Policy check, enforced by an IDOR suite from Phase 2 onward.</p>
+      <div class="diagram-panel">
+        <pre class="mermaid">
+flowchart LR
+    Req["API Request"] --> MW["Sanctum Middleware"]
+    MW -->|no| R401["401"]
+    MW -->|yes| Policy["Policy::action(user, resource)"]
+    Policy -->|admin| Allow["Allow — bypasses ownership checks"]
+    Policy -->|instructor| Own1{"Owns via batch/session\nassignment?"}
+    Policy -->|learner| Own2{"Owns via own\nenrollment/profile?"}
+    Own1 -->|yes| Allow
+    Own1 -->|no| R403["403"]
+    Own2 -->|yes| Allow
+    Own2 -->|no| R403
+        </pre>
+      </div>
+    </section>
+
+    <section id="content">
+      <h2><span class="num">5</span> Course &amp; content model</h2>
+      <p>Unchanged from Rev 2: <code>Course → Module → Section → Lesson</code>. Ordering, publish state, preview flags, completion tracking via one <code>course_progress</code> rollup service. No page-builder.</p>
+    </section>
+
+    <section id="enrollment">
+      <h2><span class="num">6</span> Enrollment &amp; access-expiry model</h2>
+      <p>The single most important domain rule — exactly one authoritative implementation: <code>EnrollmentAccessService</code>.</p>
+      <div class="schema-block">Course.default_access_days = 90         (nullable = lifetime)
+Batch.access_days_override = nullable   (overrides course default for batch enrollments)
+
+On enrollment creation (V1: always created by Admin, source = 'manual'):
+  enrolled_at = now()
+  expires_at  = enrolled_at + (batch.access_days_override ?? course.default_access_days) days
+                (null if resolved value is null → lifetime access)</div>
+      <ul>
+        <li><strong>Access check</strong> — enrollment exists, <code>status=active</code>, not expired — called by every content-serving endpoint.</li>
+        <li><strong>On expiry</strong>: learner keeps account, progress, any issued certificate. Content/video denied; "Access expired — contact admin to renew."</li>
+        <li><strong>Admin extension</strong> is the only way to extend <code>expires_at</code> (audit-logged). Not a subscription engine.</li>
+      </ul>
+      <div class="callout good">
+        <div class="label">Extensibility for future payments</div>
+        <p><code>enrollments.source</code> has exactly one active value (<code>manual</code>) in V1. A future payments module would add a <code>payment</code> value and simply call the same enrollment-creation path Admin's manual flow already uses — no speculative <code>order_id</code> column or payment table exists today.</p>
+      </div>
+    </section>
+
+    <section id="drip">
+      <h2><span class="num">7</span> Drip content</h2>
+      <p>Unchanged from Rev 2. Four release types (<code>immediate</code>, <code>days_after_enrollment</code>, <code>fixed_date</code>, <code>days_after_batch_start</code>), resolved by the same <code>EnrollmentAccessService</code>. The frontend never computes drip logic — it only renders the backend-resolved <code>unlocked_at</code>.</p>
+    </section>
+
+    <section id="batches">
+      <h2><span class="num">8</span> Batches, live sessions &amp; attendance</h2>
+      <p>Unchanged from Rev 2 — reconfirmed. Zero-or-more batches per course; <code>batch_instructors</code> vs. per-session <code>instructor_id</code>. No conferencing built. <strong>No automatic attendance detection of any kind.</strong> Batch-level access override and certificate override (§10).</p>
+      <h3>Attendance — manual marking flow</h3>
+      <ol>
+        <li>Admin schedules a session against a batch, assigns an instructor.</li>
+        <li>Trainer opens the session, sees the batch roster.</li>
+        <li>Marks present/absent/excused; "Mark All Present" is a frontend default, then exceptions are corrected.</li>
+        <li>Submits as one bulk upsert — <code>PUT /sessions/{session}/attendance</code>, one transaction.</li>
+        <li>Unique <code>(session_id, user_id)</code> — upsert updates, never duplicates.</li>
+      </ol>
+      <div class="callout">
+        <div class="label">Ownership &amp; editing</div>
+        <p>Trainer marks/edits only their assigned session's batch roster. Self-correction window is a <code>Settings</code> value (default 7 days), Admin-only beyond that. Corrections write to the existing <code>audit_logs</code> table — never hard-deleted.</p>
+      </div>
+      <p>Reporting: session/batch/learner history, attendance %, counts. Learner sees only their own. <strong>Not a certificate condition in V1.</strong></p>
+    </section>
+
+    <section id="assess">
+      <h2><span class="num">9</span> Assessments &amp; Final Course Assessment</h2>
+      <ul>
+        <li><strong>Question Bank</strong> — single source, tagged (subject/topic/exam/difficulty), reusable.</li>
+        <li>An assessment pulls a fixed question set (optionally shuffled per attempt, order-only).</li>
+        <li>Attaches to a module (module test) <strong>or</strong> a course (standalone) — never both. A standalone assessment can be explicitly designated the <strong>Final Course Assessment</strong> per course/batch (§10) — never assumed.</li>
+        <li><strong>Attempts</strong>: nullable max-attempts/time-limit. Server-side scoring only. MCQ single/multiple-choice, true/false — no essay grading in V1.</li>
+        <li><strong>Best valid attempt</strong> — highest-percent <strong>submitted</strong> attempt (ties by raw score); <code>in_progress</code>/<code>expired</code> never count. The 58%/74%/81% example uses 81%.</li>
+      </ul>
+    </section>
+
+    <section id="cert">
+      <h2><span class="num">10</span> Certificate system</h2>
+      <p>The largest V1 subsystem — four layers: <strong>Template → Configuration/Rules → Eligibility → Issuance.</strong></p>
+
+      <h3>10.1 · Configuration &amp; the AND-only rule</h3>
+      <div class="schema-block">CertificateConfigResolver::resolve(enrollment)
+  1. If enrollment.batch_id is set AND a certificate_configs row exists for that batch_id → use it.
+  2. Else use the certificate_configs row where batch_id IS NULL (the course default).
+  3. If neither exists, or is_enabled = false → not applicable; no evaluation runs.</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Condition</th><th>Always required?</th><th>Configurable?</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td>Final Course Assessment has ≥1 <strong>submitted</strong> attempt</td><td>Yes — trigger precondition</td><td>No</td></tr>
+            <tr><td>1</td><td><code>percent_complete &gt;= cond_completion_min_percent</code></td><td>Only if enabled</td><td>Enable + threshold</td></tr>
+            <tr><td>2</td><td>best attempt <code>percent &gt;= cond_assessment_percent_min</code></td><td>Only if enabled</td><td>Enable + threshold</td></tr>
+            <tr><td>3</td><td>best attempt <code>score &gt;= cond_assessment_marks_min</code></td><td>Only if enabled</td><td>Enable + threshold</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><code>eligible = conditions.filter(enabled).every(passed)</code>. <strong>No general-purpose rules engine</strong> — this fixed, structured set is the entire rule language.</p>
+
+      <h3>10.2 · Auto-generation vs. manual</h3>
+      <p><strong>ON</strong> issues immediately via <code>issueIfEligible()</code>. <strong>OFF</strong> stops at <code>eligible</code>; Admin's "Generate" button calls the identical method.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th><code>status</code></th><th>Learner sees</th></tr></thead>
+          <tbody>
+            <tr><td><code>not_applicable</code></td><td>No certificate UI</td></tr>
+            <tr><td><code>not_eligible</code></td><td>"Certificate not yet eligible" (+ breakdown)</td></tr>
+            <tr><td><code>eligible</code></td><td>"Certificate eligible" (+ "pending admin approval" if manual)</td></tr>
+            <tr><td><code>issued</code></td><td>"Certificate issued — Download"</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>10.3 · Trigger flow &amp; duplicate-generation prevention</h3>
+      <div class="diagram-panel">
+        <pre class="mermaid">
+sequenceDiagram
+    participant Learner
+    participant API as Assessment API
+    participant Evt as AssessmentAttemptSubmitted (unique-by-attempt)
+    participant Elig as CertificateEligibilityService
+    participant Issue as CertificateIssuanceService
+    participant DB as PostgreSQL
+
+    Learner->>API: submit Final Course Assessment attempt
+    API->>DB: attempts.status = submitted
+    API->>Evt: dispatch(attempt_id)  [ShouldBeUnique]
+    Evt->>Elig: evaluate(enrollment)
+    Elig->>DB: bestValidAttempt(); upsert certificate_eligibility
+    alt eligible AND auto_generate
+        Elig->>Issue: issueIfEligible(enrollment)
+        Issue->>DB: BEGIN; SELECT eligibility ... FOR UPDATE
+        alt already issued
+            Issue->>DB: ROLLBACK (no-op)
+        else not yet issued
+            Issue->>DB: INSERT certificates (unique: enrollment_id WHERE active)
+            Issue->>DB: UPDATE eligibility SET status='issued'; COMMIT
+        end
+    end
+        </pre>
+      </div>
+      <p>Three independent layers prevent duplicates from a retried job, replayed event, double-clicked "Generate," or racing workers:</p>
+      <ol>
+        <li><strong>Queue-level idempotency</strong> — unique job keyed by <code>attempt_id</code>.</li>
+        <li><strong>Row lock + short-circuit</strong> — <code>SELECT...FOR UPDATE</code> before checking status; both auto and manual paths share this one method, so a double-click hits the same lock.</li>
+        <li><strong>DB constraint backstop</strong> — partial unique <code>certificates(enrollment_id) WHERE status='active'</code>; a violation is treated as "already issued."</li>
+      </ol>
+
+      <h3>10.4 · Worked example</h3>
+      <div class="schema-block">certificate_configs (course_id=12, batch_id=NULL)   -- course default
+  is_enabled=true, final_assessment_id=88, template_id=3, auto_generate=true
+  completion&gt;=80%   assessment&gt;=70%   marks&gt;=35/50
+
+certificate_configs (course_id=12, batch_id=45)     -- Batch A: no override → inherits default
+
+certificate_configs (course_id=12, batch_id=46)     -- Batch B: explicit override
+  is_enabled=true, final_assessment_id=88, template_id=7, auto_generate=false
+  completion&gt;=90%   assessment&gt;=80%   marks&gt;=40/50</div>
+
+      <h3>10.5 · Template &amp; designer architecture</h3>
+      <p>Two authoring modes, <strong>one render pipeline</strong>:</p>
+      <ul>
+        <li><strong>Advanced (HTML/CSS) mode</strong> — edits <code>template_html</code> directly with placeholder tokens (<code>{{learner_name}}</code>, <code>{{course_title}}</code>, <code>{{batch_name}}</code>, <code>{{completion_date}}</code>, <code>{{certificate_number}}</code>, <code>{{verification_url}}</code>, <code>{{qr_code}}</code>) — used to recreate the ~19 existing Edmingle designs and by the team member comfortable with HTML.</li>
+        <li><strong>Designer (drag-and-drop) mode</strong> — canvas for text, the same bindings, images (logo/signature/background), basic shapes. <code>design_json</code> is the editable element tree; every save compiles it deterministically into <code>template_html</code> — the exact same field HTML mode edits. <strong>Exactly one render path</strong> regardless of authoring mode.</li>
+        <li>Not a general page-builder — a fixed element palette, not arbitrary layouts or interactivity.</li>
+        <li>Canvas interactions: <code>react-rnd</code> (<strong>MIT, license verified directly from the repo</strong>) — thin usage, we own the element model and compiler.</li>
+        <li><strong>PDF rendering</strong>: <code>spatie/laravel-pdf</code>, <strong>Browsershot (Chromium) driver</strong> — the default for certificates specifically (a change from Rev 2's DOMPDF-first stance), because designer-authored absolute positioning and web fonts need real CSS support. Accepted as a bounded ops cost (a small Chromium footprint) for visual fidelity.</li>
+      </ul>
+
+      <h3>10.6 · Revocation &amp; replacement</h3>
+      <p>Admin revokes → <code>status=revoked</code>, <code>revoked_at/by/reason</code> set. <strong>Never deleted</strong>; numbers/codes <strong>never reused</strong> by anything, revoked or not — no special reservation bookkeeping needed since the generator never looks at past allocations. Admin generates a <strong>replacement</strong> → new row, new number/code, <code>replaces_certificate_id</code> points at the original, goes through the same idempotent <code>CertificateIssuanceService</code>. The original being <code>revoked</code> means the partial unique index allows exactly one new active row with no special-casing. A revoked certificate's verification page still resolves and shows <code>status: revoked</code> — it never 404s.</p>
+
+      <h3>10.7–10.9 · Verification, API, UI</h3>
+      <p><code>/verify/{verification_code}</code> — learner name, course, batch, number, issue date, status; no login, no other learner data.</p>
+      <p>API additions: <code>GET/PUT .../certificate-config</code> (course + batch), <code>GET .../certificate-eligibility</code>, <code>POST .../certificates/generate</code>, <code>POST /certificates/{id}/revoke</code>, <code>POST /certificates/{id}/replace</code>, <code>GET .../assessments?standalone=true</code>, template CRUD + compile endpoint.</p>
+      <p>UI: Course/Batch certificate-settings screens, a template list with a Designer/HTML mode switch (one-way "eject to code," not reversible), enrollment-detail condition breakdown + Generate/Revoke/Replace actions, learner status badge.</p>
+    </section>
+
+    <section id="public">
+      <h2><span class="num">11</span> Public course &amp; enrollment flow</h2>
+      <div class="diagram-panel">
+        <pre class="mermaid">
+flowchart LR
+    Visitor --> Catalog["Course Catalog"]
+    Catalog --> Detail["Course Detail\n(price, discount price,\nformat, duration, curriculum,\ninstructor, batch info)"]
+    Detail --> CTA["Contact Admin CTA"]
+    CTA -.off-platform business transaction.-> Business(("Business happens\noutside the system"))
+    Business --> AdminFlow["Admin: Enrollments → New\nselect learner + course (+batch)\nconfirm/override access window"]
+    AdminFlow --> Access["Learner gains access\nimmediately"]
+        </pre>
+      </div>
+      <ul>
+        <li>Course detail shows price/discount as marketing info — <strong>no Buy Now, no checkout, no payment form anywhere.</strong></li>
+        <li><strong>Contact Admin</strong> is a simple lead-capture form routed to Admin for manual follow-up — not a CRM.</li>
+        <li><strong>Admin manual enrollment</strong>: select learner → course → optional batch → the form pre-fills <code>expires_at</code> from the resolved access-days rule with an override field → creates the enrollment via the same <code>EnrollmentAccessService</code> path used everywhere. Audit-logged.</li>
+      </ul>
+    </section>
+
+    <section id="notif">
+      <h2><span class="num">12</span> Notification architecture</h2>
+      <div class="diagram-panel">
+        <pre class="mermaid">
+flowchart LR
+    Event["Domain Event\n(EnrollmentCreated, SessionScheduled,\nCertificateIssued, AccessExpiringSoon...)"] --> Listener["Queued Listener"]
+    Listener --> NotifSvc["NotificationService"]
+    NotifSvc --> Channel{"Channel abstraction"}
+    Channel --> EmailCh["EmailChannel"]
+    Channel --> InApp["InAppChannel"]
+    Channel -.not built.-> WACh["WhatsAppChannel\n(interface only)"]
+    EmailCh --> Log["notification_logs"]
+    InApp --> Log
+        </pre>
+      </div>
+      <p>Laravel's native multi-channel Notification system; every notification queued. <strong>V1 channels: email + in-app only</strong> — WhatsApp stays an interface with no driver, no provider selected. Events: account creation, enrollment, session reminder, certificate issued, expiry reminder, assessment result.</p>
+    </section>
+
+    <section id="files">
+      <h2><span class="num">13</span> Files &amp; Bunny Stream</h2>
+      <p>Object storage: any S3-compatible provider via Flysystem, signed URLs for anything not explicitly public.</p>
+      <div class="diagram-panel">
+        <pre class="mermaid">
+sequenceDiagram
+    participant Admin
+    participant API as Laravel API
+    participant Bunny as Bunny Stream
+    participant Learner
+    Admin->>API: upload video for a lesson
+    API->>Bunny: create video, upload source
+    Bunny-->>API: video_provider_asset_id (async transcode)
+    API->>API: media_assets.status = ready
+    Learner->>API: request lesson playback
+    API->>API: canAccessCourse() + drip check
+    API->>Bunny: request signed/tokenized playback URL
+    Bunny-->>API: short-lived signed URL
+    API-->>Learner: signed URL (player embeds it)
+        </pre>
+      </div>
+      <p>Raw Bunny asset URLs are never exposed without our authorization check running first.</p>
+    </section>
+
+    <section id="reuse">
+      <h2><span class="num">14</span> Open-source reuse research</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Subsystem</th><th>Package</th><th>License / status</th><th>Strategy</th></tr></thead>
+          <tbody>
+            <tr><td>Auth</td><td>Laravel Sanctum</td><td>MIT, first-party</td><td>Reuse directly</td></tr>
+            <tr><td>RBAC</td><td>Laravel Policies (native)</td><td>MIT</td><td>Build ourselves — 3 roles</td></tr>
+            <tr><td>File/media metadata</td><td>Pattern from <code>spatie/laravel-medialibrary</code></td><td>MIT, active</td><td>Architectural reference only</td></tr>
+            <tr><td>PDF (certificates)</td><td><code>spatie/laravel-pdf</code>, Browsershot driver</td><td>MIT, active</td><td>Reuse directly — §10.5</td></tr>
+            <tr><td>Rich text editor</td><td>Tiptap</td><td>MIT, active</td><td>Reuse directly</td></tr>
+            <tr><td>Certificate designer canvas</td><td><code>react-rnd</code></td><td><strong>MIT — confirmed via LICENSE file</strong></td><td>Reuse directly, thin usage</td></tr>
+            <tr><td>Calendar UI</td><td>FullCalendar (React)</td><td>MIT core</td><td>Reuse directly</td></tr>
+            <tr><td>Admin UI primitives</td><td>shadcn/ui</td><td>MIT</td><td>Reuse directly</td></tr>
+            <tr><td>Data tables</td><td>TanStack Table</td><td>MIT</td><td>Reuse directly</td></tr>
+            <tr><td>Video</td><td><strong>Bunny Stream (confirmed)</strong></td><td>Commercial SaaS</td><td>Integrate per §13</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:.85rem;color:var(--ink-3);"><strong>Removed from Rev 2</strong>: <code>razorpay/razorpay-php</code> — no longer applicable.</p>
+      <p>Custom Laravel vs. Moodle/IOMAD/Chamilo: reconfirmed against custom — the LMS is the product, and the bespoke certificate-rules engine would fight Moodle's plugin model even harder than a payment integration would have. No GPL/AGPL code proposed; everything above is MIT.</p>
+    </section>
+
+    <section id="api">
+      <h2><span class="num">15</span> API architecture</h2>
+      <p>Unchanged from Rev 2: REST under <code>/api/v1/</code>, Laravel API Resources, Form Request validation, standard status codes (404 doubles as "not visible to you" for IDOR-sensitive resources), consistent query-param filtering/sorting, OpenAPI generated from routes (<code>dedoc/scramble</code>, MIT).</p>
+    </section>
+
+    <section id="hosting">
+      <h2><span class="num">16</span> Database hosting recommendation</h2>
+      <p>A definitive recommendation, evaluated against ~5,000 users, Indian user base, reliability, backups, cost, the Oct 20 deadline, and a small AI-assisted team.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Option</th><th>Fit</th></tr></thead>
+          <tbody>
+            <tr><td><strong>DigitalOcean Managed PostgreSQL, Bangalore (BLR1)</strong></td><td>Entry ~$15/mo, automated daily backups + PITR included, no IOPS surprises, uniform pricing. App droplet in the same region keeps latency low for Indian users. Simplest ops for a small team — no VPC/IAM overhead. HA standby (+$30/mo) addable later.</td></tr>
+            <tr><td>AWS RDS PostgreSQL, Mumbai (ap-south-1)</td><td>Enterprise-grade but real operational surface (VPC, IAM, Multi-AZ ≈2× instance cost) not justified at this scale/team-size unless there's existing AWS relationship.</td></tr>
+            <tr><td>Google Cloud SQL, Mumbai</td><td>Competitive at 8 vCPU+ tiers; not cheaper than DO at our small tier, similar overhead to RDS.</td></tr>
+            <tr><td>Self-hosted on the app VPS</td><td>Rejected — backup/PITR/patching/failover become manual team responsibility; not worth it given the Oct 20 timeline.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout good"><div class="label">Recommendation</div><p>DigitalOcean Managed PostgreSQL, single node, BLR1 region, to start — add HA once usage/revenue justifies it. App server(s) in the same region.</p></div>
+    </section>
+
+    <section id="deploy">
+      <h2><span class="num">17</span> Deployment architecture</h2>
+      <div class="diagram-panel">
+        <pre class="mermaid">
+flowchart TB
+    Internet((Internet)) --> DNS["DNS (proxied)"]
+    DNS --> Nginx["Nginx\nTLS termination"]
+    Nginx --> Next["Next.js\n(Node, PM2/systemd)"]
+    Nginx --> PHP["PHP-FPM (Laravel)"]
+    PHP --> PG[("DigitalOcean Managed\nPostgreSQL — BLR1")]
+    PHP --> Redis[("Redis")]
+    PHP -.queue:work.-> Worker["Queue Worker (supervised)"]
+    PHP -.render.-> Chromium["Headless Chromium\n(Browsershot, certificate PDFs)"]
+    Cron["Cron / Scheduler"] --> PHP
+    PHP --> S3[("S3-compatible storage")]
+    PHP -.-> Bunny["Bunny Stream API"]
+        </pre>
+      </div>
+      <p>Single droplet (or app + light render/worker box) in the same region as the managed DB. No Kubernetes, no container mandate. Nginx terminates TLS. Queue workers under systemd/Supervisor. Laravel's scheduler drives the expiry sweep, reminders, notification retry.</p>
+    </section>
+
+    <section id="testing">
+      <h2><span class="num">18</span> Testing strategy</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Layer</th><th>Tool</th><th>Focus</th></tr></thead>
+          <tbody>
+            <tr><td>Backend unit</td><td>PHPUnit/Pest</td><td><code>EnrollmentAccessService</code>, <code>CertificateEligibilityService</code> (AND combinations, disabled-condition handling), <code>CertificateIssuanceService</code> idempotency, best-attempt logic</td></tr>
+            <tr><td>Backend feature/API</td><td>Pest + HTTP testing</td><td>Every endpoint: happy path + 403 per role</td></tr>
+            <tr><td>Authorization/IDOR</td><td>Dedicated suite</td><td>Cross-tenant data, instructor vs. unassigned batch/session, learner vs. another's attendance/certificate</td></tr>
+            <tr><td>Certificate-specific</td><td>Dedicated suite</td><td>AND logic per condition toggle; batch-override resolution; duplicate issuance (concurrent + retried job); revoke→replace lineage; auto vs. manual</td></tr>
+            <tr><td>Attendance-specific</td><td>Dedicated suite</td><td>Ownership, uniqueness constraint, audit trail on correction</td></tr>
+            <tr><td>Frontend unit</td><td>Vitest/RTL</td><td>Course player state, drip-lock display, certificate status badge</td></tr>
+            <tr><td>E2E</td><td>Playwright</td><td>Admin→course→batch→learner→manual enrollment→learner completes course+Final Assessment→certificate evaluated/generated→download→public verification. Also: instructor attendance flow.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="security">
+      <h2><span class="num">19</span> Security checklist</h2>
+      <ul class="checklist">
+        <li><span class="box"></span> Passwords hashed with bcrypt/argon2</li>
+        <li><span class="box"></span> Sanctum tokens, SameSite cookies, CSRF middleware</li>
+        <li><span class="box"></span> Every protected endpoint has an explicit Policy check, IDOR-suite verified</li>
+        <li><span class="box"></span> Server-side validation via Form Requests</li>
+        <li><span class="box"></span> Rate limiting on auth endpoints</li>
+        <li><span class="box"></span> File access via short-lived signed URLs only</li>
+        <li><span class="box"></span> Bunny Stream playback URLs signed, tied to authenticated + enrolled + drip-unlocked session</li>
+        <li><span class="box"></span> Secure HTTP headers (HSTS, X-Content-Type-Options, CSP)</li>
+        <li><span class="box"></span> Audit log: role changes, manual enrollment, expiry override, certificate revoke/replace, attendance correction, settings change</li>
+        <li><span class="box"></span> DB constraints back up app checks (certificate numbers, enrollment/attendance uniqueness, NOT NULL)</li>
+        <li><span class="box"></span> Certificate issuance in a locked transaction (§10.3) — the one place idempotency really matters without a payment webhook</li>
+        <li><span class="box"></span> Dependency scanning in CI</li>
+        <li><span class="box"></span> Secrets in environment variables, never committed</li>
+        <li><span class="box"></span> Full IDOR + privilege-escalation pass before go-live</li>
+      </ul>
+    </section>
+
+    <section id="uiarch">
+      <h2><span class="num">20</span> UI architecture</h2>
+      <ul>
+        <li><strong>Public site</strong> — must closely follow verified PoshProfs branding (blue/gold, marketing layout, course cards, catalog, categories, search/filter, course detail, instructor presentation, pricing, Contact Admin CTA). Blocked on receiving actual brand assets — see §25.</li>
+        <li><strong>Learner &amp; Instructor UI</strong> — same PoshProfs visual language applied to a clean, purpose-built dashboard — not claimed as pixel-accurate reproduction of old authenticated Edmingle screens (no verified reference exists).</li>
+        <li><strong>Admin panel</strong> — functional, consistent, shadcn/ui-based, prioritizes task speed over marketing polish.</li>
+        <li>Course-builder flow: <code>Create Course → Add Modules → Add Sections → Add Lessons → Configure Access → Configure Final Course Assessment → Configure Certificate → Publish</code>.</li>
+      </ul>
+    </section>
+
+    <section id="scope">
+      <h2><span class="num">21</span> V1 scope — P0 / P1 / P2</h2>
+      <h3>P0 — must ship by Oct 20, 2026</h3>
+      <div class="pill-row">
+        <span class="pill">Auth + 3 roles</span>
+        <span class="pill">Public PoshProfs site</span>
+        <span class="pill">Admin course builder</span>
+        <span class="pill">Manual enrollment</span>
+        <span class="pill">Access expiry</span>
+        <span class="pill">Learner dashboard + player</span>
+        <span class="pill">Batches + instructors</span>
+        <span class="pill">Sessions + manual attendance</span>
+        <span class="pill">Question bank + assessments</span>
+        <span class="pill">Final Course Assessment</span>
+        <span class="pill">Certificate rules (HTML-mode templates)</span>
+        <span class="pill">Certificate verification</span>
+        <span class="pill">Basic reporting</span>
+        <span class="pill">Security/IDOR baseline</span>
+      </div>
+      <h3>P1 — immediately after Oct 20</h3>
+      <div class="pill-row">
+        <span class="pill p1">Drag-and-drop certificate designer</span>
+        <span class="pill p1">Richer reporting</span>
+        <span class="pill p1">Notification polish</span>
+        <span class="pill p1">UI refinement pass</span>
+      </div>
+      <h3>P2 — explicitly future</h3>
+      <div class="pill-row">
+        <span class="pill out">Payments / Razorpay</span>
+        <span class="pill out">WhatsApp</span>
+        <span class="pill out">Corporate portals</span>
+        <span class="pill out">Subscriptions</span>
+        <span class="pill out">Mobile apps</span>
+        <span class="pill out">SSO / LTI / proctoring</span>
+        <span class="pill out">AI features</span>
+        <span class="pill out">Marketplace / CRM / BI</span>
+      </div>
+    </section>
+
+    <section id="outscope">
+      <h2><span class="num">22</span> Out of scope (V1)</h2>
+      <p>Payment gateway/Razorpay/checkout/orders/coupons/GST invoicing · Edmingle data migration (any of it) · WhatsApp implementation · corporate portal/multi-tenancy/subscription billing · marketplace/affiliate · full CRM/accounting/advanced BI · custom video conferencing · native mobile apps · SSO/LTI/proctoring · AI tutor/course generator · gamification · social community · workflow automation engine · Kubernetes/microservices.</p>
+    </section>
+
+    <section id="timeline">
+      <h2><span class="num">23</span> Timeline — Oct 20, 2026 (fixed)</h2>
+      <p>A compressed, parallelized plan against §21's P0 list — not the sequential 12-phase plan from Rev 2. Assumes near-full-time, focused AI-assisted development with minimal drift from P0.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Week</th><th>Dates</th><th>Focus</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Sep 10–16</td><td>Repo scaffold, CI, DigitalOcean Managed Postgres (BLR1) + Redis, Sanctum auth + RBAC + IDOR harness skeleton, design tokens (blocked on brand assets — §25)</td></tr>
+            <tr><td>2</td><td>Sep 17–23</td><td>Course data model + admin course builder, media pipeline + Bunny Stream integration</td></tr>
+            <tr><td>3</td><td>Sep 24–30</td><td>Public website (catalog, detail, search/filter, Contact Admin) + batches/instructor-assignment backend</td></tr>
+            <tr><td>4</td><td>Oct 1–7</td><td>Learner LMS (dashboard, player, progress, drip/expiry) + admin manual-enrollment flow + live sessions + trainer attendance</td></tr>
+            <tr><td>5</td><td>Oct 8–14</td><td>Question bank + assessment engine + Final Course Assessment; certificate system (config, AND eligibility, auto/manual issuance, HTML templates, verification)</td></tr>
+            <tr><td>6</td><td>Oct 15–20</td><td>Security/IDOR hardening, basic reporting/CSV, bug-fix buffer, production deploy, golden-path E2E smoke test</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:.85rem;color:var(--ink-3);">Genuinely tight — see §24 for where it's most likely to slip and the honest fallback (cut further within P0, never move the date).</p>
+    </section>
+
+    <section id="risks">
+      <h2><span class="num">24</span> Risks</h2>
+      <div class="callout risk"><div class="label">1 · Schedule (highest)</div><p>Six weeks for the full P0 list is aggressive even scoped this far down. If Week 3–4 runs long, the fallback is cutting deeper into reporting/notification polish and certificate edge-case coverage — <strong>not</strong> moving Oct 20.</p></div>
+      <div class="callout risk"><div class="label">2 · Brand assets still the clearest blocker</div><p>Needed before Week 1's design tokens and Week 3's public site. Nothing provided to this session yet.</p></div>
+      <div class="callout risk"><div class="label">3 · Bunny Stream + Browsershot integration risk</div><p>Both new to this codebase — budget explicit spike time in Week 2 rather than discovering friction mid-Week-5.</p></div>
+      <div class="callout risk"><div class="label">4 · Certificate system complexity</div><p>Even HTML-mode-only, this is the most intricate business logic in the product — hence the dedicated test suite in §18.</p></div>
+      <div class="callout risk"><div class="label">5 · AI-generated code drift under time pressure</div><p>Mitigated architecturally, but discipline is hardest exactly when the schedule is tightest.</p></div>
+      <div class="callout risk"><div class="label">6 · Small-team bus factor</div><p>Compressed schedule raises the cost of any one person being unavailable.</p></div>
+    </section>
+
+    <section id="decisions">
+      <h2><span class="num">25</span> Remaining decisions</h2>
+      <p style="font-size:.85rem;color:var(--ink-3);">Everything finalized in your last two messages is treated as settled and not re-asked (payments out, no Edmingle migration, Bunny Stream, manual enrollment/attendance, AND-only certificates, Final Course Assessment, best-attempt, batch overrides, auto/manual generation, dual-mode templates, 3 roles, Oct 20 fixed). Only genuinely open items that affect the database/architecture:</p>
+      <div class="callout decision"><div class="label">25.1 · PoshProfs brand assets</div><p>Not a fork-in-the-road decision — just still missing. Needed (screenshots, brand guide, or a live site URL) before Week 1 tokens and Week 3 public-site work. Action item, not a question with alternatives.</p></div>
+      <div class="callout decision"><div class="label">25.2 · Attendance self-correction window</div><p>Modeled as a <code>Settings</code> value. <strong>Recommended default: 7 days</strong>, Admin-only beyond that. Alternative: no self-service window at all. Impact: purely a runtime setting either way — no schema consequence, safe to leave at the default.</p></div>
+      <div class="callout decision"><div class="label">25.3 · Re-attempt after certificate issuance</div><p>Modeled as one-way (§10.1) — issuance doesn't auto-revoke/reissue on a later re-attempt. <strong>Recommended: keep it one-way</strong>, since §10.6's revoke-and-replace already gives Admin a deliberate, audited correction path. Alternative: always track current best even post-issuance, requiring auto-revoke/reissue logic for an unlikely scenario.</p></div>
+      <p>If aligned with the recommended defaults on 25.2 and 25.3, no reply needed there — only 25.1 (brand assets) is a genuine blocker requiring action.</p>
+    </section>
+
+    <footer class="doc-footer">
+      End of Phase 0, Revision 3 (FINAL) — no implementation begins until this is explicitly approved.
+    </footer>
+  </main>
+</div>
