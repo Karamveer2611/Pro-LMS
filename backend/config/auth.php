@@ -16,7 +16,10 @@ return [
     */
 
     'defaults' => [
-        'guard' => env('AUTH_GUARD', 'web'),
+        // API-only app: Sanctum is the only auth mechanism, so it's the
+        // default guard everywhere ($request->user(), Auth::user(),
+        // policy/Gate checks) — not just on routes wrapped in auth:sanctum.
+        'guard' => env('AUTH_GUARD', 'sanctum'),
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
     ],
 

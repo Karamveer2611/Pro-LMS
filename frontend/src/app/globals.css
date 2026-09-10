@@ -13,6 +13,12 @@
   --ink: #1a202c;
   --ink-2: #4a5568;
   --ink-3: #858585;
+
+  /* Admin shell (dark sidebar) — separate from the public/learner tokens above */
+  --admin-sidebar: #0e1626;
+  --admin-sidebar-hover: #182238;
+  --admin-sidebar-text: #94a3b8;
+  --admin-sidebar-border: #1f2a40;
 }
 
 @theme inline {
@@ -27,6 +33,10 @@
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
+  --color-admin-sidebar: var(--admin-sidebar);
+  --color-admin-sidebar-hover: var(--admin-sidebar-hover);
+  --color-admin-sidebar-text: var(--admin-sidebar-text);
+  --color-admin-sidebar-border: var(--admin-sidebar-border);
   --font-heading: var(--font-open-sans);
   --font-sans: var(--font-source-sans);
 }
