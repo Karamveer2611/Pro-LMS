@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BatchController;
 use App\Http\Controllers\Api\BatchInstructorController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CourseController;
+use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\LessonController;
+use App\Http\Controllers\Api\LiveSessionController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\ModuleController;
 use App\Http\Controllers\Api\SectionController;
@@ -68,5 +71,21 @@ Route::prefix('v1')->group(function () {
         Route::delete('/batches/{batch}', [BatchController::class, 'destroy']);
         Route::post('/batches/{batch}/instructors', [BatchInstructorController::class, 'store']);
         Route::delete('/batches/{batch}/instructors/{user}', [BatchInstructorController::class, 'destroy']);
+
+        Route::get('/enrollments', [EnrollmentController::class, 'index']);
+        Route::get('/enrollments/{enrollment}', [EnrollmentController::class, 'show']);
+        Route::post('/enrollments', [EnrollmentController::class, 'store']);
+        Route::patch('/enrollments/{enrollment}/expiry', [EnrollmentController::class, 'extend']);
+        Route::post('/enrollments/{enrollment}/cancel', [EnrollmentController::class, 'cancel']);
+
+        Route::get('/sessions', [LiveSessionController::class, 'index']);
+        Route::get('/sessions/{session}', [LiveSessionController::class, 'show']);
+        Route::post('/batches/{batch}/sessions', [LiveSessionController::class, 'store']);
+        Route::put('/sessions/{session}', [LiveSessionController::class, 'update']);
+        Route::delete('/sessions/{session}', [LiveSessionController::class, 'destroy']);
+
+        Route::get('/sessions/{session}/attendance', [AttendanceController::class, 'index']);
+        Route::post('/sessions/{session}/attendance', [AttendanceController::class, 'store']);
+        Route::get('/me/attendance', [AttendanceController::class, 'mine']);
     });
 });

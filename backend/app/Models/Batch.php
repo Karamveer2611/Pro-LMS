@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['course_id', 'name', 'start_date', 'end_date', 'status', 'access_days_override', 'capacity'])]
 class Batch extends Model
@@ -41,5 +42,15 @@ class Batch extends Model
     public function instructors(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'batch_instructor')->withTimestamps();
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
+    public function liveSessions(): HasMany
+    {
+        return $this->hasMany(LiveSession::class);
     }
 }

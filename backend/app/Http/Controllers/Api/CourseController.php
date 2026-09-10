@@ -10,11 +10,15 @@ use App\Http\Requests\Courses\UpdateCourseStatusRequest;
 use App\Http\Resources\CourseResource;
 use App\Models\Course;
 use App\Services\CourseService;
+use App\Services\EnrollmentAccessService;
 use Illuminate\Http\Request;
 
 class CourseController extends Controller
 {
-    public function __construct(private readonly CourseService $courses) {}
+    public function __construct(
+        private readonly CourseService $courses,
+        private readonly EnrollmentAccessService $access,
+    ) {}
 
     public function index(Request $request)
     {
@@ -53,6 +57,14 @@ class CourseController extends Controller
                 $query->where('is_published', true);
             }
         }]);
+
+        foreach ($course->modules as $module) {
+            foreach ($module->sections as $section) {
+                foreach ($section->lessons as $lesson) {
+                    $lesson->setAttribute('access_state', $this->access->lessonAccessState($request->user(), $lesson));
+                }
+            }
+        }
 
         return new CourseResource($course);
     }

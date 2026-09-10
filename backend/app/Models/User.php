@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -55,8 +56,18 @@ class User extends Authenticatable
         return $this->role === UserRole::Instructor;
     }
 
+    public function isLearner(): bool
+    {
+        return $this->role === UserRole::Learner;
+    }
+
     public function instructingBatches(): BelongsToMany
     {
         return $this->belongsToMany(Batch::class, 'batch_instructor')->withTimestamps();
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class);
     }
 }

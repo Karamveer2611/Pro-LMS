@@ -4,24 +4,20 @@ namespace App\Policies;
 
 use App\Models\Lesson;
 use App\Models\User;
+use App\Services\EnrollmentAccessService;
 
 class LessonPolicy
 {
+    public function __construct(private readonly EnrollmentAccessService $access) {}
+
     /**
-     * Whether the full lesson content (video/document/text body) may be viewed —
-     * not just its title/position in the curriculum.
-     *
-     * V1 (no enrollment system yet): admin, or a preview lesson, only.
-     * TODO(Week 4): also allow when the user holds active enrollment access to
-     * the lesson's course (EnrollmentAccessService) — this is the only place
-     * that check may be added; do not duplicate it elsewhere.
+     * Whether the full lesson content (video/document/text body) may be
+     * viewed — not just its title/position in the curriculum. Single
+     * authoritative check, backed by EnrollmentAccessService::lessonAccessState
+     * (preview lessons, admin, and enrolled-and-unlocked learners all pass).
      */
     public function viewContent(?User $user, Lesson $lesson): bool
     {
-        if ($lesson->is_preview) {
-            return true;
-        }
-
-        return $user?->isAdmin() ?? false;
+        return $this->access->lessonAccessState($user, $lesson)['is_unlocked'];
     }
 }
