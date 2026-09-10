@@ -17,6 +17,17 @@ class Lesson extends Model
 {
     use HasFactory;
 
+    /**
+     * Mirrors the DB defaults on these columns — see User::$attributes for
+     * why this matters for create() responses.
+     */
+    protected $attributes = [
+        'is_published' => false,
+        'is_preview' => false,
+        'is_required' => true,
+        'release_type' => 'immediate',
+    ];
+
     protected function casts(): array
     {
         return [

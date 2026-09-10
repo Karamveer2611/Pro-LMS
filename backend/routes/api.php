@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BatchController;
+use App\Http\Controllers\Api\BatchInstructorController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\LessonController;
@@ -58,5 +60,13 @@ Route::prefix('v1')->group(function () {
         Route::delete('/lessons/{lesson}', [LessonController::class, 'destroy']);
 
         Route::post('/media', [MediaController::class, 'store']);
+
+        Route::get('/batches', [BatchController::class, 'index']);
+        Route::get('/batches/{batch}', [BatchController::class, 'show']);
+        Route::post('/courses/{course}/batches', [BatchController::class, 'store']);
+        Route::put('/batches/{batch}', [BatchController::class, 'update']);
+        Route::delete('/batches/{batch}', [BatchController::class, 'destroy']);
+        Route::post('/batches/{batch}/instructors', [BatchInstructorController::class, 'store']);
+        Route::delete('/batches/{batch}/instructors/{user}', [BatchInstructorController::class, 'destroy']);
     });
 });

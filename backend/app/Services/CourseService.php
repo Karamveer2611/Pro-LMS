@@ -16,7 +16,7 @@ class CourseService
             'slug' => Slug::unique('courses', $data['title']),
             'created_by' => $creator->id,
             'status' => CourseStatus::Draft,
-        ])->refresh(); // pick up DB-level defaults (e.g. currency) the insert didn't return in-memory
+        ]);
 
         if (! empty($data['category_ids'])) {
             $course->categories()->sync($data['category_ids']);

@@ -21,6 +21,17 @@ class UserAccessTest extends TestCase
         $this->assertCount(4, $response->json('data'));
     }
 
+    public function test_admin_can_filter_users_by_role(): void
+    {
+        $admin = User::factory()->admin()->create();
+        User::factory()->instructor()->count(2)->create();
+        User::factory()->learner()->count(3)->create();
+
+        $response = $this->actingAs($admin)->getJson('/api/v1/users?role=instructor');
+
+        $this->assertCount(2, $response->json('data'));
+    }
+
     public function test_instructor_cannot_list_users(): void
     {
         $instructor = User::factory()->instructor()->create();

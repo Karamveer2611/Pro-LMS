@@ -17,7 +17,13 @@ class UserController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
-        return UserResource::collection(User::paginate(20));
+        $query = User::query();
+
+        if ($request->filled('role')) {
+            $query->where('role', $request->string('role'));
+        }
+
+        return UserResource::collection($query->paginate(20));
     }
 
     public function show(Request $request, User $user): UserResource

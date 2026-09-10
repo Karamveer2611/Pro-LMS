@@ -23,7 +23,11 @@ class CourseContentTest extends TestCase
             'title' => 'Module 1: Foundations',
         ]);
 
-        $response->assertCreated()->assertJsonPath('data.title', 'Module 1: Foundations');
+        $response->assertCreated()
+            ->assertJsonPath('data.title', 'Module 1: Foundations')
+            // Regression: create()'s response must reflect the DB-level
+            // is_published default, not the in-memory pre-insert null.
+            ->assertJsonPath('data.is_published', false);
         $this->assertDatabaseHas('modules', ['course_id' => $course->id, 'title' => 'Module 1: Foundations']);
     }
 
@@ -109,7 +113,14 @@ class CourseContentTest extends TestCase
             'title' => 'Lesson 1',
             'type' => 'text',
             'content_body' => 'Hello learners.',
-        ])->assertCreated()->assertJsonPath('data.title', 'Lesson 1');
+        ])->assertCreated()
+            ->assertJsonPath('data.title', 'Lesson 1')
+            // Regression: create()'s response must reflect the DB-level
+            // defaults for the fields this request omitted, not nulls.
+            ->assertJsonPath('data.is_published', false)
+            ->assertJsonPath('data.is_preview', false)
+            ->assertJsonPath('data.is_required', true)
+            ->assertJsonPath('data.release_type', 'immediate');
     }
 
     public function test_a_video_lesson_requires_a_media_id(): void

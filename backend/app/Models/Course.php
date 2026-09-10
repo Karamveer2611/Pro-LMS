@@ -21,6 +21,14 @@ class Course extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * Mirrors the `currency` column's DB default — see User::$attributes
+     * for why this matters for create() responses.
+     */
+    protected $attributes = [
+        'currency' => 'INR',
+    ];
+
     protected function casts(): array
     {
         return [
@@ -50,5 +58,10 @@ class Course extends Model
     public function modules(): HasMany
     {
         return $this->hasMany(Module::class)->orderBy('order');
+    }
+
+    public function batches(): HasMany
+    {
+        return $this->hasMany(Batch::class);
     }
 }

@@ -8,6 +8,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -18,6 +19,16 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+
+    /**
+     * Mirrors the `status` column's DB default (see the users migration) so
+     * a freshly-created, unsaved-and-refreshed model already reflects it —
+     * without this, create()'s response shows null instead of "active"
+     * until the row is re-fetched.
+     */
+    protected $attributes = [
+        'status' => 'active',
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -37,5 +48,15 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === UserRole::Admin;
+    }
+
+    public function isInstructor(): bool
+    {
+        return $this->role === UserRole::Instructor;
+    }
+
+    public function instructingBatches(): BelongsToMany
+    {
+        return $this->belongsToMany(Batch::class, 'batch_instructor')->withTimestamps();
     }
 }

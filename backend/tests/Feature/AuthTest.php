@@ -22,6 +22,9 @@ class AuthTest extends TestCase
 
         $response->assertCreated()
             ->assertJsonPath('user.role', UserRole::Learner->value)
+            // Regression: create()'s response must reflect the DB-level
+            // status default, not the in-memory pre-insert null.
+            ->assertJsonPath('user.status', 'active')
             ->assertJsonStructure(['user' => ['id', 'name', 'email', 'role'], 'token']);
 
         $this->assertDatabaseHas('users', ['email' => 'jane@example.com', 'role' => 'learner']);
